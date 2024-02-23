@@ -1,6 +1,7 @@
 from flask import Flask
 from .models import db
 from flask_migrate import Migrate
+from .summary import summary_bp
 
 
 def create_app():
