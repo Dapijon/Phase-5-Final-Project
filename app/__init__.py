@@ -1,8 +1,9 @@
 from flask import Flask
+from flask_cors import CORS
 from .models import db
+from .auth_bp import auth
 from flask_migrate import Migrate
 from .summary import summary_bp
-
 
 def create_app():
     app = Flask(__name__)
@@ -14,7 +15,7 @@ def create_app():
     
     app.register_blueprint(summary_bp)
     migrate = Migrate(app, db)
-    
-    
-    
+
+    app.register_blueprint(auth, url_prefix='/auth')
+
     return app
