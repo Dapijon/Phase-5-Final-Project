@@ -8,7 +8,7 @@ import locale
 import requests
 
 
-@app.route('/cash_transfer/<int:receiver_id>/<float:amount>', methods=['POST'])
+@transactions.route('/cash_transfer/<int:receiver_id>/<float:amount>', methods=['POST'])
 @login_required
 def cash_transfer(receiver_id, amount):
     sender = current_user.id
@@ -32,7 +32,7 @@ def cash_transfer(receiver_id, amount):
         return jsonify({'error': 'Insufficient funds'})
 
 
-@app.route('/deposit', methods=['POST'])
+@transactions.route('/deposit', methods=['POST'])
 @login_required
 def deposit():
     data = request.get_json()
@@ -53,7 +53,7 @@ def deposit():
     return jsonify({'message': f'Successful Deposit of {locale.currency(float(amount), grouping=True)} at {datetime.now().strftime("%Y-%m-%d %I:%M %p")}'})
 
 
-@app.route('/withdraw', methods=['POST'])
+@transactions.route('/withdraw', methods=['POST'])
 @login_required
 def withdraw():
     data = request.get_json()
