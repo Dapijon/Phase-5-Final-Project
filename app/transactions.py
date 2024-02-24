@@ -1,39 +1,50 @@
+from sqlalchemy.exc import SQLAlchemyError
+from decimal import Decimal
 from models import db, Transaction
-from flask import request, jsonify
+from flask import Blueprint, jsonify
 from datetime import datetime
 from flask import request, redirect, flash, jsonify
-from user_bp import login_required, current_user
+from flask_login import current_user
 from models import db, User, Transaction
 import locale
 import requests
+from flask_jwt_extended import jwt_required, get_jwt_identity
 
 
-@transactions.route('/cash_transfer/<int:receiver_id>/<float:amount>', methods=['POST'])
-@login_required
+transactions_bp = Blueprint('transactions_bp', __name__)
+
+
+@transactions_bp.route('/cash_transfer/<int:receiver_id>/<float:amount>', methods=['POST'])
+@jwt_required()
 def cash_transfer(receiver_id, amount):
+    current_user_id = get_jwt_identity()
     sender = current_user.id
 
-    if current_user.balance >= amount:
-        try:
-            current_user.balance -= amount
+    if amount <= 0:
+        return jsonify({'error': 'Amount must be greater than zero'})
+
+    try:
+        if current_user.balance >= Decimal(amount):
+            current_user.balance -= Decimal(amount)
             receiver = User.query.get(receiver_id)
-            receiver.balance += amount
+            receiver.balance += Decimal(amount)
 
             new_transaction = Transaction(
-                sender=current_user, receiver=receiver, amount=amount)
+                sender=current_user, receiver=receiver, amount=Decimal(amount))
             db.session.add(new_transaction)
 
             db.session.commit()
 
             return jsonify({'message': 'Transaction successful'})
-        except Exception as e:
-            return jsonify({'error': f"Error: {str(e)}"})
-    else:
-        return jsonify({'error': 'Insufficient funds'})
+        else:
+            return jsonify({'error': 'Insufficient funds'})
+    except SQLAlchemyError as e:
+        print(f"Error: {str(e)}")
+        return jsonify({'error': f"Error: {str(e)}"})
 
 
-@transactions.route('/deposit', methods=['POST'])
-@login_required
+@transactions_bp.route('/deposit', methods=['POST'])
+@jwt_required()
 def deposit():
     data = request.get_json()
 
@@ -53,8 +64,8 @@ def deposit():
     return jsonify({'message': f'Successful Deposit of {locale.currency(float(amount), grouping=True)} at {datetime.now().strftime("%Y-%m-%d %I:%M %p")}'})
 
 
-@transactions.route('/withdraw', methods=['POST'])
-@login_required
+@transactions_bp.route('/withdraw', methods=['POST'])
+@jwt_required()
 def withdraw():
     data = request.get_json()
 
