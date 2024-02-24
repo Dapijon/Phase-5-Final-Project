@@ -1,6 +1,5 @@
 from sqlalchemy.exc import SQLAlchemyError
 from decimal import Decimal
-from models import db, Transaction
 from flask import Blueprint, jsonify
 from datetime import datetime
 from flask import request, redirect, flash, jsonify
@@ -17,8 +16,8 @@ transactions_bp = Blueprint('transactions_bp', __name__)
 @transactions_bp.route('/cash_transfer/<int:receiver_id>/<float:amount>', methods=['POST'])
 @jwt_required()
 def cash_transfer(receiver_id, amount):
-    current_user_id = get_jwt_identity()
-    sender = current_user.id
+    current_user = get_jwt_identity()
+    sender = current_user
 
     if amount <= 0:
         return jsonify({'error': 'Amount must be greater than zero'})
