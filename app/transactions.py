@@ -3,7 +3,7 @@ from decimal import Decimal
 from flask import Blueprint, jsonify, request
 from datetime import datetime
 from flask_login import current_user
-from app.models import db, User, Transaction
+from .models import db, User, Transaction
 import locale
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
@@ -36,19 +36,23 @@ def cash_transfer(receiver_id, amount):
         return jsonify({'error': f"Error: {str(e)}"})
 
 @transactions_bp.route('/deposit', methods=['POST'])
-@jwt_required()
+# @jwt_required()
 def deposit():
     data = request.get_json()
 
     amount = data.get('amount')
+    memo = data.get('memo')
+    id = data.get('id')
+    user = User.query.filter(User.id == id).first()
 
     if not amount or float(amount) <= 0:
         return jsonify({'error': 'Invalid amount'}), 400
 
-    current_user.balance += Decimal(amount)
+    # current_user.balance += float(amount)
+    user.balance += float(amount)
 
     new_transaction = Transaction(
-        sender=current_user, receiver=current_user, amount=Decimal(amount))
+        sender_id=id, receiver_id=id, amount=float(amount))
     db.session.add(new_transaction)
     db.session.commit()
 
