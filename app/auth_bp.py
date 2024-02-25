@@ -1,3 +1,4 @@
+from datetime import datetime
 from flask import Blueprint, request, jsonify
 from flask_login import login_user, logout_user
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -11,15 +12,16 @@ def register():
     if User.query.filter_by(email=data['email']).first():
         return jsonify({'error': 'Email already exists'}), 400
 
-    hashed_password = generate_password_hash(data['password'], method='sha256')
+    hashed_password = generate_password_hash(data['password'])
     new_user = User(
         first_name=data['first_name'],
         last_name=data['last_name'],
-        dob=data['dob'],
+        dob=datetime.strptime(data['dob'], '%d-%m-%Y'),
         email=data['email'],
         national_ID=data['national_ID'],
         phoneNumber=data['phoneNumber'],
         password=hashed_password,
+        transaction_password= data['trans_pass']
     )
     db.session.add(new_user)
     db.session.commit()
