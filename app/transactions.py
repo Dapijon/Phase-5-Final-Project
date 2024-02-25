@@ -65,28 +65,6 @@ def deposit():
     return jsonify({'message': f'Successful Deposit of {float(amount)} '})
 
 
-@transactions_bp.route('/withdraw', methods=['POST'])
-@jwt_required()
-def withdraw():
-    data = request.get_json()
-
-    amount = data.get('amount')
-    memo = data.get('memo')
-
-    if not amount or float(amount) <= 0:
-        return jsonify({'error': 'Invalid amount'}), 400
-
-    if current_user.balance < float(amount):
-        return jsonify({'error': 'Insufficient balance for withdrawal'})
-
-    current_user.balance -= float(amount)
-
-    new_transaction = Transaction(
-        user=current_user, type='withdraw', amount=float(amount), memo=memo)
-    db.session.add(new_transaction)
-    db.session.commit()
-
-    return jsonify({'message': f'Successful Withdrawal of {locale.currency(float(amount), grouping=True)} at {datetime.now().strftime("%Y-%m-%d %I:%M %p")}'})
 
 
 
