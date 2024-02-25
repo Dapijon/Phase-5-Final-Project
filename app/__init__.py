@@ -9,8 +9,7 @@ from .summary import summary_bp
 
 def create_app():
     app = Flask(__name__)
-    cors = CORS(app, resources={r"/api/*": {"origins": "http://localhost:3000"}})
-
+    CORS(app)
     
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///pesa.db'
     app.config['SECRET_KEY'] = 'klfjkldfjdi13kfdl44j4lkj4'
