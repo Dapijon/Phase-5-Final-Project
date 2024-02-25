@@ -62,7 +62,7 @@ def deposit():
     db.session.add(new_transaction)
     db.session.commit()
 
-    return jsonify({'message': f'Successful Deposit of {locale.currency(float(amount), grouping=True)} at {datetime.now().strftime("%Y-%m-%d %I:%M %p")}'})
+    return jsonify({'message': f'Successful Deposit of {float(amount)} '})
 
 
 @transactions_bp.route('/withdraw', methods=['POST'])
