@@ -2,6 +2,7 @@ from flask import Flask
 from flask_cors import CORS
 from .models import db
 from .auth_bp import auth
+from .transactions import transactions_bp 
 from flask_migrate import Migrate
 from .summary import summary_bp
 from .transactions import transactions_bp
@@ -12,6 +13,8 @@ def create_app():
     
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///pesa.db'
     app.config['SECRET_KEY']='klfjkldfjdi13kfdl44j4lkj4'
+    
+    app.config['JWT_TOKEN_LOCATION'] = ['headers']
     
     db.init_app(app)
     

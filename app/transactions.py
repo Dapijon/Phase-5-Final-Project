@@ -43,15 +43,14 @@ def create_password(shortcode, passkey, timestamp):
 @transactions_bp.route('/cash_transfer/<int:receiver_id>/<float:amount>', methods=['POST'])
 @jwt_required()
 def cash_transfer(receiver_id, amount):
-    current_user = get_jwt_identity()
-    sender = current_user
+    sender = User.query.get(get_jwt_identity())
 
     if amount <= 0:
         return jsonify({'error': 'Amount must be greater than zero'})
 
     try:
-        if current_user.balance >= Decimal(amount):
-            current_user.balance -= Decimal(amount)
+        if sender.balance >= Decimal(amount):
+            sender.balance -= Decimal(amount)
             receiver = User.query.get(receiver_id)
             receiver.balance += Decimal(amount)
 
@@ -94,7 +93,7 @@ def cash_transfer(receiver_id, amount):
                 print("Failed to retrieve access token. Payment not processed.")
 
             new_transaction = Transaction(
-                sender=current_user, receiver=receiver, amount=Decimal(amount))
+                sender=sender, receiver=receiver, amount=Decimal(amount))
             db.session.add(new_transaction)
             db.session.commit()
 
