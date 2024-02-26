@@ -75,9 +75,8 @@ def cash_transfer(receiver_id, amount):
                     "Timestamp": timestamp,
                     "TransactionType": "CustomerPayBillOnline",
                     "Amount": str(amount),
-                    "PartyA": sender.phoneNumber,  # Assuming sender has a phoneNumber attribute
+                    "PartyA": sender.phoneNumber,
                     "PartyB": "174379",
-                    # Assuming receiver has a phoneNumber attribute
                     "PhoneNumber": receiver.phoneNumber,
                     "CallBackURL": "https://mydomain.com/pat",
                     "AccountReference": "Test",
