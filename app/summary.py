@@ -4,7 +4,7 @@ from .models import db, User, Transaction
 
 summary_bp = Blueprint( 'summary_bp', __name__)
 
-@summary_bp.route('/user-summary')
+@summary_bp.route('/user-summary', methods=['GET'] )
 @jwt_required()
 def get_userSummary():
     current_user_id = get_jwt_identity()
