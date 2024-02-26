@@ -1,15 +1,43 @@
 from sqlalchemy.exc import SQLAlchemyError
 from decimal import Decimal
-from flask import Blueprint, jsonify
-from datetime import datetime
-from flask import request, redirect, flash, jsonify
-from flask_login import current_user
-from .models import db, User, Transaction
-import locale
+from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
-
+from .models import db, User, Transaction
+import base64
+import requests
+from datetime import datetime
 
 transactions_bp = Blueprint('transactions_bp', __name__)
+
+
+def authorization(url, key, secret):
+    plain_text = f'{key}:{secret}'
+    bytes_obj = bytes(plain_text, 'utf-8')
+    bs4 = base64.b64encode(bytes_obj)
+
+    headers = {"Authorization": "Basic " + bs4.decode('utf-8')}
+
+    try:
+        res = requests.get(url, headers=headers)
+        res.raise_for_status()
+        return res.json().get('access_token')
+    except requests.RequestException as e:
+        print(f"Error during access token retrieval: {e}")
+        print(f"Response content: {res.text}")
+        return None
+
+
+def generate_timestamp():
+    return datetime.utcnow().strftime("%Y%m%d%H%M%S")
+
+
+def create_password(shortcode, passkey, timestamp):
+    plain_text = f"{shortcode}{passkey}{timestamp}"
+    bytes_obj = bytes(plain_text, 'utf-8')
+    bs4 = base64.b64encode(bytes_obj)
+    generated_password = bs4.decode('utf-8')
+    print(f"Generated Password: {generated_password}")
+    return generated_password
 
 
 @transactions_bp.route('/cash_transfer/<int:receiver_id>/<float:amount>', methods=['POST'])
@@ -27,10 +55,47 @@ def cash_transfer(receiver_id, amount):
             receiver = User.query.get(receiver_id)
             receiver.balance += Decimal(amount)
 
+            timestamp = generate_timestamp()
+            key = "SJFuEzKXob9ztiXh1nGKZCsAFT2BDbQmPGNpQOp95GKw7ASM"
+            secret = "AtQ9sa581NtvO8YB4E9m5VYsATlBLQSCAuG6ryr7slpApSgWe6ASrFuISxN1kxsg"
+
+            token = authorization(
+                "https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials",
+                key,
+                secret
+            )
+
+            if token is not None:
+                password = create_password(
+                    "174379", "bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919", timestamp)
+
+                payload = {
+                    "BusinessShortCode": "174379",
+                    "Password": password,
+                    "Timestamp": timestamp,
+                    "TransactionType": "CustomerPayBillOnline",
+                    "Amount": str(amount),
+                    "PartyA": sender.phoneNumber,  # Assuming sender has a phoneNumber attribute
+                    "PartyB": "174379",
+                    # Assuming receiver has a phoneNumber attribute
+                    "PhoneNumber": receiver.phoneNumber,
+                    "CallBackURL": "https://mydomain.com/pat",
+                    "AccountReference": "Test",
+                    "TransactionDesc": "Test"
+                }
+
+                headers = {"Authorization": "Bearer " + token}
+
+                res = requests.post(
+                    'https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest', headers=headers, json=payload
+                )
+                print(res.json())
+            else:
+                print("Failed to retrieve access token. Payment not processed.")
+
             new_transaction = Transaction(
                 sender=current_user, receiver=receiver, amount=Decimal(amount))
             db.session.add(new_transaction)
-
             db.session.commit()
 
             return jsonify({'message': 'Transaction successful'})
@@ -39,61 +104,3 @@ def cash_transfer(receiver_id, amount):
     except SQLAlchemyError as e:
         print(f"Error: {str(e)}")
         return jsonify({'error': f"Error: {str(e)}"})
-
-
-@transactions_bp.route('/deposit', methods=['POST'])
-# @jwt_required()
-def deposit():
-    data = request.get_json()
-
-    amount = data.get('amount')
-    memo = data.get('memo')
-    id = data.get('id')
-    user = User.query.filter(User.id == id).first()
-
-    if not amount or float(amount) <= 0:
-        return jsonify({'error': 'Invalid amount'}), 400
-
-    # current_user.balance += float(amount)
-    user.balance += float(amount)
-
-    new_transaction = Transaction(
-        sender_id=id, receiver_id=id, amount=float(amount))
-    db.session.add(new_transaction)
-    db.session.commit()
-
-    return jsonify({'message': f'Successful Deposit of {float(amount)} '})
-
-
-
-
-
-@transactions_bp.route('/send', methods=['POST'])  # Ensure this route accepts POST requests
-def sendMoney():
-    data = request.get_json()
-    sender_id = data.get('sender')
-    receiver_id = data.get('receiver')
-    amount = float(data.get('amount'))
-
-    sender = User.query.filter(User.id == sender_id).first()
-    receiver = User.query.filter(User.id == receiver_id).first()
-
-    if not receiver:
-        return jsonify({'error': 'Receiver user does not exist'}), 404
-
-    if not sender:
-        return jsonify({'error': 'Sender user does not exist'}), 404
-
-    # if sender.balance < amount:
-    #     return jsonify({'error': 'Insufficient balance'}), 400
-
-    # sender.balance -= amount
-    # receiver.balance += amount
-
-    transaction = Transaction(sender_id=sender_id, receiver_id=receiver_id, amount=amount)
-    db.session.add(transaction)
-    db.session.commit()
-
-    return jsonify({'message': 'Money sent'}), 201
-
-    
