@@ -1,5 +1,6 @@
 from datetime import datetime
 from flask import Blueprint, request, jsonify
+from flask_cors import cross_origin
 from flask_login import login_user, logout_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from .models import db, User
@@ -7,6 +8,7 @@ from .models import db, User
 auth = Blueprint('auth', __name__)
 
 @auth.route('/register', methods=['POST'])
+@cross_origin()
 def register():
     data = request.get_json()
     if User.query.filter_by(email=data['email']).first():
@@ -16,12 +18,12 @@ def register():
     new_user = User(
         first_name=data['first_name'],
         last_name=data['last_name'],
-        dob=datetime.strptime(data['dob'], '%d-%m-%Y'),
+        dob=datetime.strptime(data['dob'], '%Y-%m-%d'),
         email=data['email'],
         national_ID=data['national_ID'],
         phoneNumber=data['phoneNumber'],
         password=hashed_password,
-        transaction_password= data['trans_pass']
+        transaction_password=data['transaction_password']
     )
     db.session.add(new_user)
     db.session.commit()
