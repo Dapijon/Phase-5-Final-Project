@@ -1,6 +1,7 @@
 from datetime import datetime
 from flask import Blueprint, request, jsonify
 from flask_cors import cross_origin
+from flask_jwt_extended import create_access_token
 from flask_login import login_user, logout_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from .models import db, User
@@ -27,6 +28,8 @@ def register():
     )
     db.session.add(new_user)
     db.session.commit()
+    
+    
     return jsonify({'message': 'User created successfully'})
 
 @auth.route('/login', methods=['POST'])
@@ -35,7 +38,10 @@ def login():
     user = User.query.filter_by(email=data['email']).first()
     if user and check_password_hash(user.password, data['password']):
         login_user(user)
-        return jsonify({'message': 'Login successful'})
+        access_token = create_access_token(identity=user.id)
+        return jsonify(access_token=access_token), 200
+
+        # return jsonify({'message': 'Login successful'})
     else:
         return jsonify({'error': 'Invalid email or password'}), 401
 

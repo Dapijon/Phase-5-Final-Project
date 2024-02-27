@@ -1,6 +1,7 @@
 from flask import Flask
 from flask_cors import CORS
 from flask_login.login_manager import LoginManager
+from flask_jwt_extended import JWTManager
 from .models import db, User
 from .auth_bp import auth
 from .transactions import transactions_bp 
@@ -19,6 +20,7 @@ def create_app():
 
     login_manager = LoginManager()
     login_manager.init_app(app)
+    jwt= JWTManager(app)
     
     login_manager.login_view = 'auth.login'
 
