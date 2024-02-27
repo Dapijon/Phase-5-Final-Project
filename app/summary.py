@@ -1,8 +1,19 @@
-from flask import Blueprint, jsonify
+from functools import wraps
+from flask import Blueprint, abort, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_login import login_required, current_user
 from .models import db, User, Transaction
 
 summary_bp = Blueprint( 'summary_bp', __name__)
+
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated or not current_user.is_admin:
+            abort(403)  # HTTP 403 Forbidden error
+        return f(*args, **kwargs)
+    return decorated_function
+
 
 @summary_bp.route('/user-summary')
 @jwt_required()
@@ -42,3 +53,81 @@ def admin_transaction_summary():
     }
     
     return jsonify(summary_data), 200
+
+
+
+
+
+@summary_bp.route('/users')
+@login_required
+@admin_required
+def get_users():
+    if not current_user.is_admin:
+        return jsonify({'message': 'Unauthorized access'}), 403
+    users = User.query.all()
+    users_data = [{
+        'id': user.id,
+        'first_name': user.first_name,
+        'last_name': user.last_name,
+        'email': user.email,
+        'national_ID': user.national_ID,
+        'phoneNumber': user.phoneNumber,
+        'balance': user.balance,
+    } for user in users]
+    return jsonify(users_data), 200
+
+
+@summary_bp.route('/transactions/summary')
+@login_required
+@admin_required
+def transactions_summary():
+    # Logic to retrieve transaction summary
+    transactions = Transaction.query.all()
+    total_transactions = len(transactions)
+    total_amount = sum(transaction.amount for transaction in transactions)
+    return jsonify({
+        'total_transactions': total_transactions,
+        'total_amount': total_amount
+    }), 200
+
+
+@summary_bp.route('/analytics')
+@admin_required
+def analytics():
+    # Calculate sum of amount sent
+    total_amount_sent = db.session.query(
+        db.func.sum(Transaction.amount)).scalar() or 0
+
+    # Calculate total balance of all users
+    total_balance = db.session.query(db.func.sum(User.balance)).scalar() or 0
+
+    return jsonify({
+        'total_amount_sent': total_amount_sent,
+        'total_balance': total_balance
+    }), 200
+
+
+@summary_bp.route('/make-admin/<int:user_id>', methods=['PUT'])
+@admin_required
+def make_admin(user_id):
+    # Find the user by user_id
+    user = User.query.get(user_id)
+    if user:
+        user.is_admin = True
+        db.session.commit()
+        return jsonify({'message': 'User has been made admin'}), 200
+    else:
+        return jsonify({'error': 'User not found'}), 404
+
+
+@summary_bp.route('/delete-user/<int:user_id>', methods=['DELETE'])
+@admin_required
+def delete_user(user_id):
+    # Find the user by user_id
+    user = User.query.get(user_id)
+    if user:
+        db.session.delete(user)
+        db.session.commit()
+        return jsonify({'message': 'User has been deleted'}), 200
+    else:
+        return jsonify({'error': 'User not found'}), 404
