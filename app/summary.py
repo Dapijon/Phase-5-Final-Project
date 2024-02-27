@@ -59,8 +59,8 @@ def admin_transaction_summary():
 
 
 @summary_bp.route('/users')
-@login_required
-@admin_required
+# @login_required
+# @admin_required
 def get_users():
     if not current_user.is_admin:
         return jsonify({'message': 'Unauthorized access'}), 403
@@ -120,14 +120,4 @@ def make_admin(user_id):
         return jsonify({'error': 'User not found'}), 404
 
 
-@summary_bp.route('/delete-user/<int:user_id>', methods=['DELETE'])
-@admin_required
-def delete_user(user_id):
-    # Find the user by user_id
-    user = User.query.get(user_id)
-    if user:
-        db.session.delete(user)
-        db.session.commit()
-        return jsonify({'message': 'User has been deleted'}), 200
-    else:
-        return jsonify({'error': 'User not found'}), 404
+
