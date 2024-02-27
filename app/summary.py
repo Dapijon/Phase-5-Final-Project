@@ -86,6 +86,42 @@ def get_users():
     return jsonify(users_data), 200
 
 
+@summary_bp.route('/user-transactions/<int:user_id>', methods=['GET'])
+@jwt_required()
+def get_user_transactions(user_id):
+    try:
+       
+        current_user_id = get_jwt_identity()
+        if current_user_id != user_id:
+            return jsonify({'error': 'Unauthorized access to user transactions'}), 403
+
+       
+        user = User.query.get(user_id)
+        if user is None:
+            return jsonify({'error': 'User not found'}), 404
+
+       
+        transactions = Transaction.query.filter(
+            (Transaction.sender_id == user_id) | (Transaction.receiver_id == user_id)
+        ).all()
+
+        
+        serialized_transactions = [{
+            'id': transaction.id,
+            'sender_id': transaction.sender_id,
+            'receiver_id': transaction.receiver_id,
+            'amount': transaction.amount,
+           
+        } for transaction in transactions]
+
+        return jsonify(serialized_transactions), 200
+
+    except Exception as e:
+        print("Error:", e)
+        return jsonify({'error': 'An unexpected error occurred'}), 500
+
+
+
 @summary_bp.route('/transactions/summary')
 @login_required
 @admin_required
