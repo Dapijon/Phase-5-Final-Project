@@ -90,7 +90,7 @@ def get_users():
 @login_required
 @admin_required
 def transactions_summary():
-    # Logic to retrieve transaction summary
+   
     transactions = Transaction.query.all()
     total_transactions = len(transactions)
     total_amount = sum(transaction.amount for transaction in transactions)
@@ -102,12 +102,13 @@ def transactions_summary():
 
 @summary_bp.route('/analytics')
 @admin_required
+@login_required
 def analytics():
-    # Calculate sum of amount sent
+   
     total_amount_sent = db.session.query(
         db.func.sum(Transaction.amount)).scalar() or 0
 
-    # Calculate total balance of all users
+   
     total_balance = db.session.query(db.func.sum(User.balance)).scalar() or 0
 
     return jsonify({
