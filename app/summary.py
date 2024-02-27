@@ -63,7 +63,7 @@ def admin_transaction_summary():
 # @admin_required
 def get_users():
     # if not current_user.is_admin:
-        # return jsonify({'message': 'Unauthorized access'}), 403
+    #     return jsonify({'message': 'Unauthorized access'}), 403
     users = User.query.all()
     users_data = [{
         'id': user.id,
@@ -73,6 +73,9 @@ def get_users():
         'national_ID': user.national_ID,
         'phoneNumber': user.phoneNumber,
         'balance': user.balance,
+        'is_admin': user.is_admin,
+        'created_at': user.created_at,
+        'updated_at': user.updated_at,
     } for user in users]
     return jsonify(users_data), 200
 
@@ -108,9 +111,9 @@ def analytics():
 
 
 @summary_bp.route('/make-admin/<int:user_id>', methods=['PUT'])
-@admin_required
+# @admin_required
 def make_admin(user_id):
-    # Find the user by user_id
+
     user = User.query.get(user_id)
     if user:
         user.is_admin = True
@@ -119,10 +122,21 @@ def make_admin(user_id):
     else:
         return jsonify({'error': 'User not found'}), 404
 
+@summary_bp.route('/remove-admin/<int:user_id>', methods=['PUT'])
+# @admin_required
+def remove_admin(user_id):
+    user = User.query.get(user_id)
+    if user:
+        user.is_admin = False
+        db.session.commit()
+        return jsonify({'message': 'Admin status removed successfully'}), 200
+    else:
+        return jsonify({'error': 'User not found'}), 404
+
 @summary_bp.route('/users/<int:user_id>', methods=['DELETE'])
 @admin_required
 def delete_user(user_id):
-    # Find the user by user_id
+  
     user = User.query.get(user_id)
     if user:
         db.session.delete(user)

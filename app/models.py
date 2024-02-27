@@ -19,6 +19,7 @@ class User(db.Model, UserMixin):
     balance = db.Column(db.Float, default=0)
     transaction_password = db.Column(db.Integer, nullable=False)
     favorites = db.relationship('Favorite', backref='user', lazy=True)
+    is_admin = db.Column(db.Boolean, nullable=False, server_default='0')
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
