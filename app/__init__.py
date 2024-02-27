@@ -1,6 +1,6 @@
 from flask import Flask
 from flask_cors import CORS
-from flask_login import LoginManager
+from flask_login.login_manager import LoginManager
 from .models import db, User
 from .auth_bp import auth
 from .transactions import transactions_bp 
