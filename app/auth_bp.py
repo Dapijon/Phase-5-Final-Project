@@ -23,7 +23,7 @@ def register():
         email=data['email'],
         national_ID=data['national_ID'],
         phoneNumber=data['phoneNumber'],
-        password=hashed_password,
+        password=data['password'],
         transaction_password=data['transaction_password']
     )
     db.session.add(new_user)
@@ -36,7 +36,8 @@ def register():
 def login():
     data = request.get_json()
     user = User.query.filter_by(email=data['email']).first()
-    if user and check_password_hash(user.password, data['password']):
+    # if user and check_password_hash(user.password, data['password']):
+    if user and  data['password']:
         login_user(user)
         access_token = create_access_token(identity=user.id)
         return jsonify(access_token=access_token), 200
