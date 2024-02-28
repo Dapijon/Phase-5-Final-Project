@@ -64,8 +64,8 @@ def admin_transaction_summary():
 
 
 
-@summary_bp.route('/users')
-@login_required
+@summary_bp.route('/users', methods=['GET'])
+@jwt_required()
 @admin_required
 def get_users():
     if not current_user.is_admin:
