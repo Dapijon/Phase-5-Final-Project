@@ -86,33 +86,45 @@ def get_users():
     return jsonify(users_data), 200
 
 
-@summary_bp.route('/user-transactions/<int:user_id>', methods=['GET'])
+@summary_bp.route('/user-transactions', methods=['GET'])
 @jwt_required()
-def get_user_transactions(user_id):
+def get_user_transactions():
     try:
-       
         current_user_id = get_jwt_identity()
-        if current_user_id != user_id:
-            return jsonify({'error': 'Unauthorized access to user transactions'}), 403
-
-       
-        user = User.query.get(user_id)
+        user = User.query.get(current_user_id)
         if user is None:
             return jsonify({'error': 'User not found'}), 404
 
-       
         transactions = Transaction.query.filter(
-            (Transaction.sender_id == user_id) | (Transaction.receiver_id == user_id)
+            (Transaction.sender_id == current_user_id) | (Transaction.receiver_id == current_user_id)
         ).all()
 
-        
-        serialized_transactions = [{
-            'id': transaction.id,
-            'sender_id': transaction.sender_id,
-            'receiver_id': transaction.receiver_id,
-            'amount': transaction.amount,
-           
-        } for transaction in transactions]
+        serialized_transactions = []
+        for transaction in transactions:
+            # Determine if the current user sent or received the transaction
+            if transaction.sender_id == current_user_id:
+                transaction_type = 'sent'
+                other_user_id = transaction.receiver_id
+            else:
+                transaction_type = 'received'
+                other_user_id = transaction.sender_id
+
+            # Fetch other user's details
+            other_user = User.query.get(other_user_id)
+            if other_user is None:
+                other_user_details = {'id': None, 'name': 'Unknown'}
+            else:
+                other_user_details = {'id': other_user.id, 'name': f'{other_user.first_name} {other_user.last_name}'}
+
+            # Construct serialized transaction object
+            serialized_transaction = {
+                'id': transaction.id,
+                'type': transaction_type,
+                'amount': transaction.amount,
+                'date': transaction.timestamp.strftime('%Y-%m-%d %H:%M:%S') if transaction.timestamp else None,
+                'other_user': other_user_details
+            }
+            serialized_transactions.append(serialized_transaction)
 
         return jsonify(serialized_transactions), 200
 
@@ -188,5 +200,29 @@ def delete_user(user_id):
     else:
         return jsonify({'error': 'User not found'}), 404
 
+
+@summary_bp.route('/user', methods=['GET'])
+@jwt_required()
+def get_current_user():
+    current_user_id = get_jwt_identity()
+    current_user = User.query.get(current_user_id)
+
+    if not current_user:
+        return jsonify({'message': 'User not found'}), 404
+
+    user_data = {
+        'id': current_user.id,
+        'first_name': current_user.first_name,
+        'last_name': current_user.last_name,
+        'email': current_user.email,
+        'national_ID': current_user.national_ID,
+        'phoneNumber': current_user.phoneNumber,
+        'balance': current_user.balance,
+        'is_admin': current_user.is_admin,
+        'created_at': current_user.created_at,
+        'updated_at': current_user.updated_at,
+    }
+
+    return jsonify(user_data), 200
 
 
