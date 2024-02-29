@@ -66,8 +66,10 @@ def admin_transaction_summary():
 
 @summary_bp.route('/users', methods=['GET'])
 @jwt_required()
-@admin_required
+# @admin_required
 def get_users():
+    current_user_id = get_jwt_identity()
+    current_user = User.query.get(current_user_id)
     if not current_user.is_admin:
         return jsonify({'message': 'Unauthorized access'}), 403
     users = User.query.all()
