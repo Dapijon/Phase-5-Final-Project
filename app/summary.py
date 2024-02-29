@@ -60,6 +60,22 @@ def admin_transaction_summary():
     
     return jsonify(summary_data), 200
 
+@summary_bp.route('/all-transactions', methods=['GET'])
+@jwt_required()
+def get_transactions():
+    current_user_id = get_jwt_identity()
+
+    
+    current_user = User.query.get(current_user_id)
+    if not current_user.is_admin:
+        return jsonify({"message": "Unauthorized access"}), 401
+    
+    transactions = Transaction.query.all()
+ 
+    transactions_list = [transaction.to_dict() for transaction in transactions]
+
+    return jsonify(transactions_list), 200
+
 
 
 
@@ -143,10 +159,14 @@ def transactions_summary():
    
     transactions = Transaction.query.all()
     total_transactions = len(transactions)
+    
     total_amount = sum(transaction.amount for transaction in transactions)
+    average_transaction = total_amount/total_transactions
     return jsonify({
         'total_transactions': total_transactions,
-        'total_amount': total_amount
+        'total_amount': total_amount,
+        'Average_transaction': average_transaction,
+        
     }), 200
 
 
