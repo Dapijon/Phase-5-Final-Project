@@ -1,4 +1,5 @@
 from flask import Flask
+import os
 from flask_cors import CORS
 from flask_login.login_manager import LoginManager
 from flask_jwt_extended import JWTManager
@@ -13,7 +14,7 @@ def create_app():
     cors = CORS(app, resources={r"/api/*": {"origins": "http://localhost:3000"}})
 
     
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///pesa.db'
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
     app.config['SECRET_KEY'] = 'klfjkldfjdi13kfdl44j4lkj4'
     
     db.init_app(app)
