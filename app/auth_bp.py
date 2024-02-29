@@ -33,9 +33,11 @@ def register():
 def login():
     data = request.get_json()
     user = User.query.filter_by(email=data['email']).first()
-    if user and check_password_hash(user.password, data['password']):
+    #if user and check_password_hash(user.password, data['password']):
+    if user and (data['password']):
         login_user(user)
-        return jsonify({'message': 'Login successful'})
+        access_token = create_access_token(identity=user.id)
+        return jsonify(access_token=access_token), 200
     else:
         return jsonify({'error': 'Invalid email or password'}), 401
 
