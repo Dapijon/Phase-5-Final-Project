@@ -173,8 +173,7 @@ def transactions_summary():
 
 
 @summary_bp.route('/analytics')
-@admin_required
-@login_required
+@jwt_required()
 def analytics():
    
     total_amount_sent = db.session.query(
@@ -190,10 +189,11 @@ def analytics():
 
 
 @summary_bp.route('/make-admin/<int:user_id>', methods=['PUT'])
-@admin_required
+# @jwt_required()
 def make_admin(user_id):
 
     user = User.query.get(user_id)
+    print(user)
     if user:
         user.is_admin = True
         db.session.commit()
@@ -202,7 +202,7 @@ def make_admin(user_id):
         return jsonify({'error': 'User not found'}), 404
 
 @summary_bp.route('/remove-admin/<int:user_id>', methods=['PUT'])
-@admin_required
+# @jwt_required()
 def remove_admin(user_id):
     user = User.query.get(user_id)
     if user:
@@ -213,7 +213,7 @@ def remove_admin(user_id):
         return jsonify({'error': 'User not found'}), 404
 
 @summary_bp.route('/users/<int:user_id>', methods=['DELETE'])
-@admin_required
+# @jwt_required()
 def delete_user(user_id):
   
     user = User.query.get(user_id)
