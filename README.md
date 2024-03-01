@@ -52,6 +52,15 @@ python3 app.py
 
 We welcome contributions from the community to improve and extend the functionality of our Money Transfer App backend. Please follow the guidelines outlined in the CONTRIBUTING.md file for submitting pull requests.
 
+# Authors
+Leon Kinyanjui
+
+Walter Ndungu
+
+Humphrey Hinga
+
+Charles Wanjiku
+
 # License
 
 This project is licensed under the MIT License.
