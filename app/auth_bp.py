@@ -32,15 +32,27 @@ def register():
     
     return jsonify({'message': 'User created successfully'})
 
+
 @auth.route('/login', methods=['POST'])
+
 def login():
     data = request.get_json()
     user = User.query.filter_by(email=data['email']).first()
     # if user and check_password_hash(user.password, data['password']):
     if user and  data['password']:
         login_user(user)
-        access_token = create_access_token(identity=user.id)
-        return jsonify(access_token=access_token), 200
+        additional_claims = {
+                'is_admin': user.is_admin,
+                'name': user.first_name,
+            }
+        access_token = create_access_token(identity=user.id, additional_claims=additional_claims)
+        refresh_token = create_access_token(identity=user.id)
+       
+        return jsonify({
+            'access_token':access_token,
+            'refresh_token':refresh_token,
+            
+            }), 200
 
         # return jsonify({'message': 'Login successful'})
     else:

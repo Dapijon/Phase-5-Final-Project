@@ -32,9 +32,9 @@ class User(db.Model, UserMixin):
             'email': self.email,
             'national_ID': self.national_ID,
             'phoneNumber': self.phoneNumber,
-            'password': self.password,
+           
             'balance': self.balance,
-            'transaction_password': self.transaction_password,
+            
             'favorites': [favorite.to_dict() for favorite in self.favorites],
             'is_admin': self.is_admin,
             'created_at': self.created_at.strftime('%Y-%m-%d %H:%M:%S') if self.created_at else None,

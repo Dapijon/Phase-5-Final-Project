@@ -153,8 +153,8 @@ def get_user_transactions():
 
 
 @summary_bp.route('/transactions/summary')
-@login_required
-@admin_required
+@jwt_required()
+# @admin_required
 def transactions_summary():
    
     transactions = Transaction.query.all()
@@ -162,10 +162,12 @@ def transactions_summary():
     
     total_amount = sum(transaction.amount for transaction in transactions)
     average_transaction = total_amount/total_transactions
+    total_balance = db.session.query(db.func.sum(User.balance)).scalar() or 0
     return jsonify({
         'total_transactions': total_transactions,
-        'total_amount': total_amount,
+        'total_amount_transacted': total_amount,
         'Average_transaction': average_transaction,
+        'total_balance': total_balance,
         
     }), 200
 
