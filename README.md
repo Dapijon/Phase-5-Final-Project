@@ -68,3 +68,5 @@ This project is licensed under the MIT License.
 If you have any questions or need further assistance, feel free to reach out to us at leon.kinyanjui@student.moringaschool.com.
 
 Thank you for using our Money Transfer App backend!
+
+Happy coding...
